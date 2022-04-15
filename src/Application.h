@@ -20,10 +20,31 @@ private:
     void loadArguments(int argc, char** argv);
     void loadGrid();
     void resizeGridSize(const char* text);
-    void printGrid();
+    void printGrid(std::string&&);
+    bool astar();
+
+    struct Astar
+    {
+        enum class Type
+        {
+            empty = 0,
+            path = 3,
+            obstacle = 5
+        };
+
+        struct Tile
+        {
+            Type type;
+            uint16_t y;
+            uint16_t x;
+        };
+
+        std::vector<Tile> openList;
+        std::vector<Tile> closedList;
+    };
 
     std::string mGeneratedFile;
-    std::vector<std::vector<char>> mGrid;
-    uint32_t mGridWidth;
-    uint32_t mGridHeight;
+    std::vector<std::vector<Astar::Tile>> mGrid;
+    uint16_t mGridWidth;
+    uint16_t mGridHeight;
 };

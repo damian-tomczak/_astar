@@ -16,9 +16,13 @@ Application::~Application()
 void Application::run()
 {
     loadGrid();
-#ifdef _DEBUG
-    printGrid();
-#endif
+
+    printGrid("The following grid has been loaded:");
+    if (!astar())
+    {
+        throw std::runtime_error("Finding the path has failed!");
+    }
+    printGrid("The result of astar algorithm:");
 }
 
 void Application::loadArguments(int argc, char** argv)
@@ -50,11 +54,13 @@ void Application::loadGrid()
 
     resizeGridSize(text.data());
 
-    for (uint32_t i = 0, y = 0; y < mGridHeight; y++)
+    for (uint16_t i = 0, y = 0; y < mGridHeight; y++)
     {
-        for (uint32_t x = 0; x < mGridWidth; x++, i += 2)
+        for (uint16_t x = 0; x < mGridWidth; x++, i += 2)
         {
-            mGrid[y][x] = text[i];
+            mGrid[y][x].type = static_cast<Astar::Type>(text[i] - '0');
+            mGrid[y][x].x = x;
+            mGrid[y][x].y = y;
         }
     }
 }
@@ -75,7 +81,7 @@ void Application::resizeGridSize(const char* text)
     }
 
     // Set height size
-    uint32_t tmpWidth = 0;
+    uint16_t tmpWidth = 0;
     for (const char* tmpText = text;; tmpText++)
     {
         if (!(tmpText && *tmpText))
@@ -107,23 +113,46 @@ void Application::resizeGridSize(const char* text)
     }
 
     // Set grid size
-    mGrid.resize(mGridHeight, std::vector<char>(mGridWidth));
+    mGrid.resize(mGridHeight, std::vector<Astar::Tile>(mGridWidth));
 }
 
-void Application::printGrid()
+void Application::printGrid(std::string&& text)
 {
-    std::cout << "The following grid has been loaded: \n";
-    for (uint32_t y = 0; y < mGridHeight; y++)
+    std::cout << "\n" << text << "\n";
+    for (uint16_t y = 0; y < mGridHeight; y++)
     {
-        for (uint32_t x = 0; x < mGridWidth; x++)
+        for (uint16_t x = 0; x < mGridWidth; x++)
         {
-            std::cout << mGrid[y][x];
-            if (x != mGridWidth - 1)
+            int currentType = static_cast<int>(mGrid[y][x].type);
+
+            std::string prefix;
+            switch (currentType)
             {
-                std::cout << " ";
+            case 0:
+                prefix = "\033[1;97;42m";
+                break;
+            case 3:
+                prefix = "\033[1;97;43m";;
+                break;
+            case 5:
+                prefix = "\033[1;97;41m";;
+                break;
             }
+            std::string suffix = "\033[0m";
+            std::cout << prefix << currentType << suffix;
         }
 
         std::cout << "\n";
     }
+}
+
+bool Application::astar()
+{
+    using Tile = Astar::Tile;
+    Tile& start = mGrid[0][0];
+    Tile& finish = mGrid[mGridHeight - 1][mGridWidth - 1];
+
+
+
+    return true;
 }
