@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <filesystem>
 
 std::vector<char> inline readFile(const std::string& fileName)
 {
