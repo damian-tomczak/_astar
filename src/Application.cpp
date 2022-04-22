@@ -199,19 +199,22 @@ bool Application::astar()
 
     OPEN_LIST.push_back(mStart);
 
-    while (true)
+    Tile* lowest = nullptr;
+
+    do
     {
-        Tile* lowest = mAstar->findLowestfCostInOpen();
+        lowest = mAstar->findMostOptimalTile();
         CLOSED_LIST.push_back(lowest);
         OPEN_LIST.erase(std::remove_if(OPEN_LIST.begin(), OPEN_LIST.end(), [lowest](Tile* t) -> bool {
-            return t == lowest ? true : false;
+            bool tmp = t == lowest ? true : false;
+            return tmp;
             }), OPEN_LIST.end());
 
         NeighborPointer neighbors = getNeighbors(lowest);
         for (auto current : neighbors)
         {
-            if ((current->mType == Type::empty) &&
-                (std::find(OPEN_LIST.begin(), OPEN_LIST.end(), current) == OPEN_LIST.end()))
+            if ((current->mType == Type::empty || current->mType == Type::finish) &&
+                (std::find(CLOSED_LIST.begin(), CLOSED_LIST.end(), current) == CLOSED_LIST.end()))
             {
                 OPEN_LIST.push_back(current);
                 current->mpParent = lowest;
@@ -232,7 +235,9 @@ bool Application::astar()
             std::cout << "{ " << *tile << " }\n";;
             });
 #endif // _DEBUG
-    }
+    } while (lowest->mType != Type::finish);
 
+#undef OPEN_LIST
+#undef CLOSED_LIST
     return true;
 }

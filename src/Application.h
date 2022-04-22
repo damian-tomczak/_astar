@@ -123,26 +123,25 @@ private:
             rTile->mfCost = gCost + hCost;
         }
 
-        Tile* findLowestfCostInOpen()
+        Tile* findMostOptimalTile()
         {
             size_t size = mOpenList.size();
             if (size == 0)
             {
                 throw std::runtime_error("The tile with the lowest f cost can not be found.");
             }
-            else
+
+            Tile* lowest = mOpenList[0];
+            for (int i = 1; i < size; i++)
             {
-                Tile& lowest = *mOpenList[0];
-                for (int i = 1; i < size; i++)
+                if ((mOpenList[i]->mfCost < lowest->mfCost) &&
+                    std::find(mClosedList.begin(), mClosedList.end(), mOpenList[i]) == mClosedList.end())
                 {
-                    if ((mOpenList[i]->mfCost < lowest.mfCost) &&
-                        std::find(mClosedList.begin(), mClosedList.end(), mOpenList[i]) == mClosedList.end())
-                    {
-                        lowest = *mOpenList[i];
-                    }
+                    lowest = mOpenList[i];
                 }
-                return &lowest;
             }
+
+            return lowest;
         }
     };
 
