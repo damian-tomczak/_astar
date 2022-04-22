@@ -128,12 +128,19 @@ private:
             size_t size = mOpenList.size();
             if (size == 0)
             {
-                throw std::runtime_error("The tile with the lowest f cost can not be found.");
+                throw std::runtime_error("Path cannot be found!");
             }
 
-            Tile* lowest = mOpenList[0];
-            for (int i = 1; i < size; i++)
+            Tile* lowest = mOpenList[size - 1];
+            for (int i = size - 2; i >= 0; i--)
             {
+                Tile* current = mOpenList[i];
+                if (current->mType == Type::finish)
+                {
+                    lowest = current;
+                    break;
+                }
+
                 if ((mOpenList[i]->mfCost < lowest->mfCost) &&
                     std::find(mClosedList.begin(), mClosedList.end(), mOpenList[i]) == mClosedList.end())
                 {

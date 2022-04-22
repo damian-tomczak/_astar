@@ -1,4 +1,5 @@
 #include "Application.h"
+#include <cassert>
 
 int main(int argc, char** argv)
 {
@@ -8,6 +9,7 @@ int main(int argc, char** argv)
         app.run();
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
+        assert(false);
         return EXIT_FAILURE;
     }
 

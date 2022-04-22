@@ -129,7 +129,7 @@ void Application::resizeGridSize(const char* text)
         }
     }
 
-    if (mGridWidth < 5 || mGridHeight < 5)
+    if (mGridWidth < static_cast<size_t>(5) || mGridHeight < static_cast<size_t>(5))
     {
         throw std::runtime_error("The grid size should be bigger!");
     }
@@ -201,6 +201,7 @@ bool Application::astar()
 
     Tile* lowest = nullptr;
 
+    // Setup path
     do
     {
         lowest = mAstar->findMostOptimalTile();
@@ -235,7 +236,16 @@ bool Application::astar()
             std::cout << "{ " << *tile << " }\n";;
             });
 #endif // _DEBUG
+
     } while (lowest->mType != Type::finish);
+
+    // Find path
+    Tile* parent = lowest->mpParent;
+    while (parent->mType != Type::start)
+    {
+        parent->mType = Type::path;
+        parent = parent->mpParent;
+    }
 
 #undef OPEN_LIST
 #undef CLOSED_LIST
