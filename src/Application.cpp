@@ -194,17 +194,44 @@ bool Application::astar()
     using Tile = Astar::Tile;
     using Type = Astar::Type;
     mAstar = std::make_unique<Astar>();
+#define OPEN_LIST mAstar->mOpenList
+#define CLOSED_LIST mAstar->mClosedList
 
-    mAstar->mClosedList.push_back(mStart);
+    OPEN_LIST.push_back(mStart);
 
-    for (auto current : getNeighbors(*mStart))
+    while (true)
     {
-        if (current->mType == Type::empty)
+        Tile* lowest = mAstar->findLowestfCostInOpen();
+        CLOSED_LIST.push_back(lowest);
+        OPEN_LIST.erase(std::remove_if(OPEN_LIST.begin(), OPEN_LIST.end(), [lowest](Tile* t) -> bool {
+            return t == lowest ? true : false;
+            }), OPEN_LIST.end());
+
+        NeighborPointer neighbors = getNeighbors(lowest);
+        for (auto current : neighbors)
         {
-            mAstar->mOpenList.push_back(current);
-            current->mpParent = mStart;
-            mAstar->calculatefCost(*current, *mFinish);
+            if ((current->mType == Type::empty) &&
+                (std::find(OPEN_LIST.begin(), OPEN_LIST.end(), current) == OPEN_LIST.end()))
+            {
+                OPEN_LIST.push_back(current);
+                current->mpParent = lowest;
+                mAstar->calculatefCost(current, mFinish);
+            }
         }
+
+#ifdef _DEBUG
+        std::cout << "////////////////////////////////////////////////////////////////////////\n";
+        std::cout << "Lowest:\n" << *lowest << "\n";
+        std::cout << "Lowest's neighbors:\n" << neighbors << "\n";
+        std::cout << "OpenList:\n";
+        std::for_each(OPEN_LIST.begin(), OPEN_LIST.end(), [](Tile* tile) -> void {
+            std::cout << "{ " << *tile << " }\n";
+            });
+        std::cout << "ClosedList:\n";
+        std::for_each(CLOSED_LIST.begin(), CLOSED_LIST.end(), [](Tile* tile) -> void {
+            std::cout << "{ " << *tile << " }\n";;
+            });
+#endif // _DEBUG
     }
 
     return true;

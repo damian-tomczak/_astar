@@ -38,6 +38,28 @@ private:
             finish = 7
         };
 
+        static const char* typeToString(const Type& type)
+        {
+            switch (type)
+            {
+            case Type::empty:
+                return "empty";
+                break;
+            case Type::path:
+                return "path";
+                break;
+            case Type::obstacle:
+                return "obstacle";
+                break;
+            case Type::start:
+                return "start";
+                break;
+            case Type::finish:
+                return "finish";
+                break;
+            }
+        }
+
         struct Tile final
         {
         public:
@@ -51,19 +73,35 @@ private:
             }
 
             Type mType;
-            uint16_t y;
             uint16_t x;
+            uint16_t y;
             Tile* mpParent;
             double mfCost;
+
+            friend std::ostream& operator<<(std::ostream& os, Tile& tile)
+            {
+                return os                    <<
+                    &tile                    <<
+                    " "                      <<
+                    tile.x                   <<
+                    " "                      <<
+                    tile.y                   <<
+                    " "                      <<
+                    tile.mpParent            <<
+                    " "                      <<
+                    tile.mfCost              <<
+                    " "                      <<
+                    typeToString(tile.mType);
+            }
         };
 
         std::vector<Tile*> mOpenList;
         std::vector<Tile*> mClosedList;
 
-        [[nodiscard]] double calculategCost(const Tile& rTile) const
+        [[nodiscard]] double calculategCost(const Tile* rTile) const
         {
             int result = 0;
-            Tile* tmpParent = rTile.mpParent;
+            Tile* tmpParent = rTile->mpParent;
             while (tmpParent)
             {
                 result++;
@@ -73,16 +111,38 @@ private:
             return result;
         }
 
-        [[nodiscard]] double calculatehCost(const Tile& rTile, const Tile& rFinish) const
+        [[nodiscard]] double calculatehCost(const Tile* rTile, const Tile* rFinish) const
         {
-            return sqrt(pow(rTile.x - rFinish.x, 2) + pow(rTile.y - rFinish.y, 2));
+            return sqrt(pow(rTile->x - rFinish->x, 2) + pow(rTile->y - rFinish->y, 2));
         }
 
-        void calculatefCost(Tile& rTile, Tile& rFinish)
+        void calculatefCost(Tile* rTile, Tile* rFinish)
         {
             double gCost = calculategCost(rTile);
             double hCost = calculatehCost(rTile, rFinish);
-            rTile.mfCost = gCost + hCost;
+            rTile->mfCost = gCost + hCost;
+        }
+
+        Tile* findLowestfCostInOpen()
+        {
+            size_t size = mOpenList.size();
+            if (size == 0)
+            {
+                throw std::runtime_error("The tile with the lowest f cost can not be found.");
+            }
+            else
+            {
+                Tile& lowest = *mOpenList[0];
+                for (int i = 1; i < size; i++)
+                {
+                    if ((mOpenList[i]->mfCost < lowest.mfCost) &&
+                        std::find(mClosedList.begin(), mClosedList.end(), mOpenList[i]) == mClosedList.end())
+                    {
+                        lowest = *mOpenList[i];
+                    }
+                }
+                return &lowest;
+            }
         }
     };
 
@@ -135,28 +195,36 @@ private:
                 throw std::runtime_error("Selected wrong index!");
             }
         }
+        friend std::ostream& operator<<(std::ostream& os, NeighborPointer& p)
+        {
+            for (int i = 0; i < p.n; i++)
+            {
+                os << "{ "  << *p[i] << " }\n";
+            }
+            return os;
+        }
 
         Astar::Tile** begin() const { return p; }
         Astar::Tile** end() const { return p + n; }
     };
 
-    NeighborPointer getNeighbors(const Astar::Tile& tile, uint16_t* numberOfNeighbors = nullptr)
+    NeighborPointer getNeighbors(const Astar::Tile* tile, uint16_t* numberOfNeighbors = nullptr)
     {
         uint16_t currentNumberOfNeighbors = 1;
 
-        if (tile.y != 0)
+        if (tile->y != 0)
         {
             currentNumberOfNeighbors++;
         }
-        if (tile.y != mGridHeight - 1)
+        if (tile->y != mGridHeight - 1)
         {
             currentNumberOfNeighbors++;
         }
-        if (tile.x != 0)
+        if (tile->x != 0)
         {
             currentNumberOfNeighbors++;
         }
-        if (tile.x != mGridWidth - 1)
+        if (tile->x != mGridWidth - 1)
         {
             currentNumberOfNeighbors++;
         }
@@ -169,22 +237,22 @@ private:
         NeighborPointer result = NeighborPointer(currentNumberOfNeighbors - 1);
 
         uint16_t currentItem = 0;
-        if (tile.y != 0)
+        if (tile->y != 0)
         {
             Astar::Tile* tmp = result[currentItem];
-            result[currentItem++] = &mGrid[tile.y - 1][tile.x];
+            result[currentItem++] = &mGrid[tile->y - 1][tile->x];
         }
-        if (tile.y != mGridHeight - 1)
+        if (tile->y != mGridHeight - 1)
         {
-            result[currentItem++] = &mGrid[tile.y + 1][tile.x];
+            result[currentItem++] = &mGrid[tile->y + 1][tile->x];
         }
-        if (tile.x != 0)
+        if (tile->x != 0)
         {
-            result[currentItem++] = &mGrid[tile.y][tile.x - 1];
+            result[currentItem++] = &mGrid[tile->y][tile->x - 1];
         }
-        if (tile.x != mGridWidth - 1)
+        if (tile->x != mGridWidth - 1)
         {
-            result[currentItem++] = &mGrid[tile.y][tile.x + 1];
+            result[currentItem++] = &mGrid[tile->y][tile->x + 1];
         }
 
         return result;
